@@ -1,0 +1,7 @@
+---
+title: "data-exploration"
+format: html
+---
+
+data = read.csv(./data/U.S._Chronic_Disease_Indicators.csv)
+

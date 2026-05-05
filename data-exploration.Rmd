@@ -1,0 +1,125 @@
+---
+title: "data-exploration"
+output: html_document
+---
+
+```{r, load data}
+# library(HDSinRdata)
+# library(readr)
+# library(dplyr)
+# library(stringr)
+
+library(haven)
+library(tidyverse)
+
+
+
+# Data is from: https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?Cycle=2021-2023
+# Description of data: https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Questionnaire&Cycle=2021-2023
+
+data_alq = read_xpt("./data/ALQ_L.xpt") # Alcohol
+data_bmx = read_xpt("./data/BMX_L.xpt") # Body measurements
+data_bpq = read_xpt("./data/BPQ_L.xpt") # Blood Pressure & Cholesterol
+data_demo = read_xpt("./data/DEMO_L.xpt") # demographics data
+# data_fsq = read_xpt("./data/FSQ_L.xpt") # Not related to health demographics and not used.
+data_inq = read_xpt("./data/INQ_L.xpt") # Income information
+
+data_smqr = read_xpt("./data/SMQRTU_L.xpt") # smoking recent
+data_smq = read_xpt("./data/SMQ_L.xpt") # smoke usage
+data_paq = read_xpt("./data/PAQ_L.xpt") # physical activity adult
+data_paqy = read_xpt("./data/PAQY_L.xpt") # physical activity youth
+
+data_total = left_join(data_alq, data_bmx)
+data_total = left_join(data_total, data_demo)
+data_total = left_join(data_total, data_inq)
+# data_total = left_join(data_total, data_fsq)
+data_total = left_join(data_total, data_smqr)
+data_total = left_join(data_total, data_smq)
+data_total = left_join(data_total, data_paq)
+data_total = left_join(data_total, data_paqy)
+
+
+glimpse(data_total)
+
+
+## TODO: Create a function that returns the column name from a df, or manually
+# Get the label for a column named 'USUBJID'
+column_description <- attr(data_total$ALQ111, "label")
+print(column_description)
+
+
+
+
+
+
+#attr# summary(is.na(data_total))
+
+
+
+
+
+
+```
+
+
+
+**Questions**
+How are age, sex, race/ethnicity, physical activity, and smoking associated with BMI?
+  - SLR, MLR
+Can we predict whether an adult is obese using demographic and lifestyle predictors?
+  - Use selection method, and PCA.
+Does alcohol consumption remain associated with BMI after adjusting smoking status and physical activity?
+  - chi squared (todo: research this topic) Hypothesis testing. 
+
+
+
+
+```{r, q1}
+
+# How are age, sex, race/ethnicity, physical activity, and smoking associated with BMI?
+#   - SLR, MLR
+
+#race is a complex range of values, categories so we will leave it out for now; can include this later
+
+age_lab = attr(data_total$RIDAGEYR, "label")
+
+age_value = data_total$RIDAGEYR
+sex = data_total$RIAGENDR
+
+# Create a range based on the data fields: 
+# Drop 999 PAD800
+physical_activity = 
+
+
+# BMI is found in the data_bmx file - data_total$
+bmi_measure = data_total$BMXBMI
+
+
+
+```
+
+
+
+```{r, q2}
+
+# Can we predict whether an adult is obese using demographic and lifestyle predictors?
+#   - Use selection method, and PCA.
+
+# We will need to clean the data here, looking for only predictors that relate to BMI.
+# Idea is to use subset selection or PCA to find the most important predictors.
+
+# Relate blood pressure, bmi, vs other demographic measures.
+
+```
+
+
+
+
+```{r, q3}
+
+# Does alcohol consumption remain associated with BMI after adjusting smoking status and physical activity?
+#   - chi squared (todo: research this topic) Hypothesis testing.
+
+
+```
+
