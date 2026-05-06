@@ -17,46 +17,28 @@ library(tidyverse)
 # Data is from: https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?Cycle=2021-2023
 # Description of data: https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Questionnaire&Cycle=2021-2023
 
-data_alq = read_xpt("./data/ALQ_L.xpt") # Alcohol
-data_bmx = read_xpt("./data/BMX_L.xpt") # Body measurements
-data_bpq = read_xpt("./data/BPQ_L.xpt") # Blood Pressure & Cholesterol
-data_demo = read_xpt("./data/DEMO_L.xpt") # demographics data
-# data_fsq = read_xpt("./data/FSQ_L.xpt") # Not related to health demographics and not used.
-data_inq = read_xpt("./data/INQ_L.xpt") # Income information
+data_alq = read_xpt("./data/ALQ_L.xpt")     # Alcohol
+data_bmx = read_xpt("./data/BMX_L.xpt")     # Body measurements
+data_bpq = read_xpt("./data/BPQ_L.xpt")     # Blood Pressure & Cholesterol
+data_demo = read_xpt("./data/DEMO_L.xpt")   # Demographics data
+# data_fsq = read_xpt("./data/FSQ_L.xpt")   # Not related to health demographics and not used.
+data_inq = read_xpt("./data/INQ_L.xpt")     # Income information
+data_paq = read_xpt("./data/PAQ_L.xpt")     # Physical activity adult
+data_paqy = read_xpt("./data/PAQY_L.xpt")   # Physical activity youth
+data_smq = read_xpt("./data/SMQ_L.xpt")     # Smoke usage
+data_smqr = read_xpt("./data/SMQRTU_L.xpt") # Smoking recent
 
-data_smqr = read_xpt("./data/SMQRTU_L.xpt") # smoking recent
-data_smq = read_xpt("./data/SMQ_L.xpt") # smoke usage
-data_paq = read_xpt("./data/PAQ_L.xpt") # physical activity adult
-data_paqy = read_xpt("./data/PAQY_L.xpt") # physical activity youth
 
+# Join the data into a single df
 data_total = left_join(data_alq, data_bmx)
+data_total = left_join(data_total, data_bpq)
 data_total = left_join(data_total, data_demo)
-data_total = left_join(data_total, data_inq)
 # data_total = left_join(data_total, data_fsq)
-data_total = left_join(data_total, data_smqr)
-data_total = left_join(data_total, data_smq)
+data_total = left_join(data_total, data_inq)
 data_total = left_join(data_total, data_paq)
 data_total = left_join(data_total, data_paqy)
-
-
-glimpse(data_total)
-
-
-## TODO: Create a function that returns the column name from a df, or manually
-# Get the label for a column named 'USUBJID'
-column_description <- attr(data_total$ALQ111, "label")
-print(column_description)
-
-
-
-
-
-
-#attr# summary(is.na(data_total))
-
-
-
-
+data_total = left_join(data_total, data_smq)
+data_total = left_join(data_total, data_smqr)
 
 
 ```
@@ -76,27 +58,67 @@ Does alcohol consumption remain associated with BMI after adjusting smoking stat
 
 ```{r, q1}
 
-# How are age, sex, race/ethnicity, physical activity, and smoking associated with BMI?
-#   - SLR, MLR
-
-#race is a complex range of values, categories so we will leave it out for now; can include this later
-
-age_lab = attr(data_total$RIDAGEYR, "label")
-
-age_value = data_total$RIDAGEYR
-sex = data_total$RIAGENDR
-
-# Create a range based on the data fields: 
-# Drop 999 PAD800
-physical_activity = 
+# How are age, gender, race/ethnicity, physical activity, and smoking associated with BMI?
 
 
-# BMI is found in the data_bmx file - data_total$
-bmi_measure = data_total$BMXBMI
+
+
+# Linear regression: BMI ~ age + gender + physical activity + smoking
+
+model_df = data_total %>%
+  transmute(
+    BMI = BMXBMI,
+    age = RIDAGEYR,
+    gender = RIAGENDR,
+    days_physical = PAD800,
+    smoking = SMQ040
+  ) %>%
+  # Remove special missing/refused codes
+  filter(
+    !is.na(BMI),
+    !is.na(age),
+    !is.na(gender),
+    !is.na(days_physical),
+    !is.na(smoking),
+    !days_physical %in% c(7777, 9999), # NHANES codes: 7777-Refused, 9999-Don't know
+    smoking %in% c(1, 2, 3)  # NHANES codes: 1-Every day, 2-Some days, 3-Not at all
+  ) %>%
+  mutate(
+    gender_value = factor(gender, levels = c(1, 2), labels = c("Male", "Female")),
+    smoking = factor(smoking)  # keeps smoking as categorical
+  )
+
+# ## Sanity check
+# sum(is.na(model_df$BMI))
+# sum(is.na(model_df$age))
+# sum(is.na(model_df$gender))
+# sum(is.na(model_df$days_physical))
+# sum(is.na(model_df$smoking))
+
+# Fit model
+fit_bmi = lm(BMI ~ age + gender + days_physical + smoking, data = model_df)
+
+# Results
+summary(fit_bmi)
+
+# Optional diagnostics
+par(mfrow = c(2, 2)) # divide the plotting area into 2x2 grid
+plot(fit_bmi)
+
+fit_age = lm(BMI ~ age, data = model_df)
+summary(fit_age)
+par(mfrow = c(2, 2))
+plot(fit_age)
+
+fit_physical = lm(BMI ~ days_physical, data = model_df)
+plot(fit_physical)
+
 
 
 
 ```
+
+
 
 
 
@@ -109,6 +131,14 @@ bmi_measure = data_total$BMXBMI
 # Idea is to use subset selection or PCA to find the most important predictors.
 
 # Relate blood pressure, bmi, vs other demographic measures.
+
+
+# https://github.com/ryantibs/best-subset
+library(devtools)
+install_github(repo="ryantibs/best-subset", subdir="bestsubset")
+
+
+
 
 ```
 
