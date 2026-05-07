@@ -1,7 +1,35 @@
 ---
-title: "data-exploration"
+title: "Final Project, Group 1"
+description: "Stats 515-002"
 format: html
+authors:
+  - "Jonathan Dale"
+  - "Rashad Chowdhury"
 ---
 
-data = read.csv(./data/U.S._Chronic_Disease_Indicators.csv)
+
+## How are age, gender, race/ethnicity, physical activity, and smoking associated with BMI?
+
+We start by downloading NHANES data from the CDC website for the 2021 - 2023 cohort [cdc.gov](https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Questionnaire&Cycle=2021-2023). We used a subset of the available data set which includeed: `Alcohol`, `Body measurements`, `Blood Pressure & Cholesterol`, `Demographics data`, `Income information`, `Physical activity` for both adult and youth, and `Smoke usage`. These files are available to the public in `.xpt` format, and after downloading, they were loaded into a data frame in R using the `read_xpt` function. Since each data file contains a unique `Respondent Sequnece Number` we are able to join all of the individual files into one full data frame. We then begin to fit a linear regression model using BMI as a predictor and age, gender, physical activity, and smoking as independent variables. Our total data frame is used to filter only the necessary variables and drop any missing values. We are left with 1847 observations to work with for a linear regression model; the the results show that a clear relation ship is not visible. 
+
+## Checking for significance in the model
+
+After fitting the linear regression model, looking at the coefficients output from the `summary(fit_bmi)` command. A coefficient value of `Pr(>|t|) > 0.05 should be treated as not statistically significant given the other predictors in the model.
+
+We can see from the coefficient table that some of the variables are not significant and do not contribute to the linear model.
+
+**Analysis from the `final_fit` model:**
+We can see that at least one predictor is associated with BMI meaning that overall the model is statistically significant. However; the R^2 value of 0.0179 and adjusted R^2 fo 0.0158 means that these variables only explain less than 1.8% of the total BMI variation. 
+
+Age is significant and negative (beta = -.0365, p = 0.00019), this means that holding all other variables fixed, each 1 year increase in age is associated with about 0.036 lower BMI on average.
+
+Days of physical activity is not significant, p = 0.116, we see no strong evidence that it contributes after adjustment in the model. 
+
+Smoking2 is borderline with p = 0.0577, this shows weak evidence for higher BMI than the referenced smoking group.
+
+Smoking3 is significant and positive, beta = 1.714 and p < 0.001, this category has about a 1.71 higher BMI than the referenced smoking category adjusting for age and physical activity.
+
+
+**Overall Summary of Findings**
+In a multiple linear regression of BMI on age, days of physical activity, and smoking, age and smoking were significant predictors while days of physical activity was not. Despite statistical signifiance of the overall model, explanatory power was low (adjusted R^2 = 0.016), suggesting important BMI predictors are not included in this specification. 
 
