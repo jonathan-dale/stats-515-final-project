@@ -88,12 +88,6 @@ model_df = data_total %>%
     smoking = factor(smoking)  # keeps smoking as categorical
   )
 
-# ## Sanity check
-# sum(is.na(model_df$BMI))
-# sum(is.na(model_df$age))
-# sum(is.na(model_df$gender))
-# sum(is.na(model_df$days_physical))
-# sum(is.na(model_df$smoking))
 
 # Fit model
 fit_bmi = lm(BMI ~ age + gender + days_physical + smoking, data = model_df)
@@ -105,18 +99,59 @@ summary(fit_bmi)
 par(mfrow = c(2, 2)) # divide the plotting area into 2x2 grid
 plot(fit_bmi)
 
-fit_age = lm(BMI ~ age, data = model_df)
-summary(fit_age)
-par(mfrow = c(2, 2))
-plot(fit_age)
 
-fit_physical = lm(BMI ~ days_physical, data = model_df)
-plot(fit_physical)
+# Table of coefficients
+coef_table = summary(fit_bmi)$coefficients
+coef_table
 
-
+# Non significant coefficients
+nonsig = coef_table[coef_table[, "Pr(>|t|)"] > 0.05, , drop = FALSE]
+nonsig
 
 
 ```
+
+
+
+
+```{r q1 subset selection}
+
+# install.packages("leaps")  # run once
+library(leaps)
+
+# Build matrix from same formula
+x = model.matrix(BMI ~ age + gender + days_physical + smoking, data = model_df)[, -1]
+y = model_df$BMI
+
+subset_fit = regsubsets(x = x, y = y, nvmax = ncol(x), method = "exhaustive")
+subset_sum = summary(subset_fit)
+
+# Compare models by adjusted R^2, Cp, BIC
+subset_sum$adjr2
+subset_sum$cp
+subset_sum$bic
+
+# Best model size by each criterion
+best_adjr2_size = which.max(subset_sum$adjr2)
+best_cp_size    = which.min(subset_sum$cp)
+best_bic_size   = which.min(subset_sum$bic)
+
+best_adjr2_size
+best_cp_size
+best_bic_size
+
+# Coefficients for best BIC, cp, adjR^2 model
+coef(subset_fit, best_bic_size)
+coef(subset_fit, best_cp_size)
+coef(subset_fit, best_adjr2_size)
+
+
+# Refit with selected terms
+final_fit = lm(BMI ~ age + days_physical + smoking, data = model_df)
+summary(final_fit)
+
+```
+
 
 
 
