@@ -1,7 +1,40 @@
 ---
 title: "data-exploration"
-output: html_document
+date: "`r Sys.Date()`"
+authors: 
+  - "Jonathan Dale"
+  - "Rashad Chowdhury"
+output: 
+  html_document:
+    df_print: paged
+    code_folding: show   # all chunks shown by default, can change to hide
+    word_document: default
+    pdf_document: default
 ---
+
+```{css, echo=FALSE}
+
+<!-- define CSS rules to limit the height of code blocks -->
+
+pre {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 900px;
+}
+
+.scroll-100 {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: inherit;
+}
+/*
+  Source https://bookdown.org/yihui/rmarkdown-cookbook/html-scroll.html
+*/
+```
+
 
 ```{r, load data}
 # library(HDSinRdata)
@@ -84,10 +117,25 @@ model_df = data_total %>%
     smoking %in% c(1, 2, 3)  # NHANES codes: 1-Every day, 2-Some days, 3-Not at all
   ) %>%
   mutate(
-    gender_value = factor(gender, levels = c(1, 2), labels = c("Male", "Female")),
-    smoking = factor(smoking)  # keeps smoking as categorical
-  )
+    gender = factor(gender, levels = c(1, 2),
+                          labels = c("Male", "Female")),
+    smoking = factor(smoking, levels = c(1, 2, 3),
+                     labels = c("Every day", "Some days", "Not at all"))
+    )
 
+# Check the smoking factor variable levels
+levels(model_df$smoking)             # factor levels
+table(model_df$smoking)              # counts by level
+prop.table(table(model_df$smoking))  # proportions
+
+# Set "Not at all" as the reference level used in lm() output
+model_df$smoking = relevel(model_df$smoking, ref = "Not at all")
+
+
+# Check the gender factor variable levels
+levels(model_df$gender)             # factor levels
+table(model_df$gender)              # counts by level
+prop.table(table(model_df$gender))  # proportions
 
 # Fit model
 fit_bmi = lm(BMI ~ age + gender + days_physical + smoking, data = model_df)
@@ -95,7 +143,7 @@ fit_bmi = lm(BMI ~ age + gender + days_physical + smoking, data = model_df)
 # Results
 summary(fit_bmi)
 
-# Optional diagnostics
+# Visual diagnostics plot
 par(mfrow = c(2, 2)) # divide the plotting area into 2x2 grid
 plot(fit_bmi)
 
@@ -150,6 +198,10 @@ coef(subset_fit, best_adjr2_size)
 final_fit = lm(BMI ~ age + days_physical + smoking, data = model_df)
 summary(final_fit)
 
+# Visual diagnostics plot
+par(mfrow = c(2, 2)) # divide the plotting area into 2x2 grid
+plot(final_fit)
+
 ```
 
 
@@ -169,8 +221,8 @@ summary(final_fit)
 
 
 # https://github.com/ryantibs/best-subset
-library(devtools)
-install_github(repo="ryantibs/best-subset", subdir="bestsubset")
+# library(devtools)
+# install_github(repo="ryantibs/best-subset", subdir="bestsubset")
 
 
 
