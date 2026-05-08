@@ -231,19 +231,6 @@ chisq_res
 chisq_res$expected
 print(round(chisq_res$expected,2))
 print(round(chisq_res$residuals, 2)) 
-# we can see that the largest discrepancies between observed and expected counts, indicating which cells contribute most to the chi-square statistic
-# Absolute values >3 indicate cells which contributed to a significant lack of fit 
-# This means the observed cell is drastically different from the count expected under the null hypothesis.
-# High Positive Residual: The cell contains a much higher count than expected (an over-representation).
-# High Negative Residual: The cell contains a much lower count than expected (an under-representation).
-# A significant lack of fit, driven by one or more cells, suggests:
-#                Association Exists: In a test of independence, it means the categorical variables are associated, rather than independent.
-
-
-#We reject the null hypothesis since the p-value is much smaller than common significance levels (e.g., 0.05, 0.01, or even 0.001). 
-#This provides strong evidence of a significant association between the a person's blood pressure  and the amount of drinks consumed. 
-#In other words, the chi-square test results indicate that the likelihood of an adult having high blood pressure is significantly associated with the amount of drinks consumed.
-
 
 ```
 
@@ -268,20 +255,18 @@ data_fsq["Food_insecure"]=c(" ") #column that says whether or not the individual
 data_fsq["On_Snap"]=c(" ")  #column that says whether or not they were receiving SNAP benefits in the last 12 months
 data_fsq["EFood"]= c(" ")  #column that says whether or not they received emergency food
 data_fsq["WIC"]=c(" ")   #column that says whether or not the household received WIC program benefits
-data_fsq["Snap_amt"]= c(" ") #column that records the amount of snap benefits received in $
 data_fsq["NSnap"]= c(" ") #column that says the amount of people in a household received SNAP benefits
 
+# adding N/A as a value to clean later on
 fsq_test = data_fsq %>% mutate(data_fsq, Food_insecure= if_else(FSDAD>=3,1, #1 = yes, 2= no
                                                       if_else(FSDAD>0 & FSDAD <3, 2,
                                                               if_else(FSDAD == ".", NA, 2))),
                           On_Snap = if_else(FSQ012>2, NA,
                                                   if_else(FSQ012 == ".",NA, FSQ012)),
                   EFood = if_else(FSD151>2, NA,
-                                        if_else(FSD151 == ".",NA,FSQ012)),
+                                        if_else(FSD151 == ".",NA,FSD151)),
                   WIC = if_else(FSD162>2, NA,
                                 if_else(FSD162== ".", NA, FSD162)),
-                  Snap_amt= if_else( FSD235>1000, NA, 
-                                     if_else(FSD235 == ".", NA, FSD235)),
                   NSnap =if_else(FSD165N>7, NA,
                                  if_else(FSD165N==".",NA,FSD165N)))
 
@@ -291,29 +276,32 @@ demo_test = data_demo %>%
 
 test_data2 = fsq_test %>%
     inner_join(demo_test, by = "SEQN") %>%
-        select(Food_insecure,On_Snap,EFood,WIC,Snap_amt,NSnap,age, sex, race, education, IPR, hh_size)
+        select(Food_insecure,On_Snap,EFood,WIC,NSnap,age, sex, race, education, IPR, hh_size)
 
 test_data2 = test_data2 %>% mutate(
-                    Food_insecure = factor(Food_insecure, levels = c(1,2), labels = c("Unsecure","Secure")),
+                    Food_insecure = factor(Food_insecure, levels = c(1,2), labels = c("Insecure","Secure")),
                     sex = factor(sex, levels = c(1,2), labels = c("Male","Female")),
                     race = factor(race),
                     education = factor(education),
                     On_Snap = factor(On_Snap, levels = c(1,2), labels = c("Yes","No")),
                     EFood= factor(EFood,levels = c(1,2), labels=c("Yes","No")),
                     WIC = factor(WIC,levels = c(1,2), labels = c("Yes","No"))) 
-test_data2 = test_data2 %>% drop_na(Food_insecure)
+test_data2 = test_data2 %>% na.omit(test_data2)
 
 set.seed(1)
 
-train = sample(c(TRUE,FALSE), nrow(test_data2), rep=TRUE)
-trdata = test_data2[train,]
-tdata = test_data2[-train,]
+
+
+trainsize = floor(0.70 * nrow(test_data2))
+indices = sample(seq_len(nrow(test_data2)), size = trainsize)
+tdata = test_data2[-indices,]
+trdata = test_data2[indices,]
 
 prop.table(table(trdata$Food_insecure))
 
 FoodTree = rpart(Food_insecure~ On_Snap + EFood+ WIC + IPR + hh_size + age + sex + race + education,
                  trdata, method = "class", na.action = na.rpart, control = rpart.control(
-                   cp = 0.001,
+                   cp = 0.005,
                    minsplit = 20,
                    maxdepth = 6
                  ))
@@ -327,9 +315,15 @@ rpart.plot(prunetree,
            fallen.leaves = TRUE)
 
 tree_class = predict(prunetree, tdata, type="class")
-treeprob = predict(prunetree, tdata, type = "prob")[, "Unsecure"]
+treeprob = predict(prunetree, tdata, type = "prob")[, "Insecure"]
 
-confusionMatrix(tree_class, tdata$Food_insecure, positive = "Secure")
+cm = confusionMatrix(tree_class, tdata$Food_insecure, positive = "Insecure")
+print(cm)
+FN = cm$table[2,1]  
+TP = cm$table[1,1]    
+FNR = FN / (FN + TP)
+
+
 
 ```
 
