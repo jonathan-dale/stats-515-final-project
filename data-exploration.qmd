@@ -58,8 +58,8 @@ In a multiple linear regression of BMI on age, days of physical activity, and sm
   [Insert code output to show contingency table + chi sqaure results]
   
   
-   When comparing the chi square "expected" results, it is important to remember that the values shown is what the expected observations would be if the two variables were independent of each other. When looking at the values of the chi square "residuals", or Pearson Residuals, if the absolute value of a cell is greater than three, it would indicate whether or not that cell contributed to a significant lack of fit. This would mean for a high positive residual the cell contains a much higher count than expected, and vice versa for high negative residuals. Knowing this, we see that the absolute value of both "Yes" and "No" for the "Light" drinking frequency could both contribute to a significant lack of fit.
-   [Show expected and residual values]
+   When comparing the chi square "expected" results, it is important to remember that the values shown is what the expected observations would be if the two variables were independent of each other. When looking at the values of the chi square "residuals", or Pearson Residuals, if the absolute value of a cell is greater than three, it would indicate whether or not that cell contributed to a significant lack of fit. This would mean for a high positive residual the cell contains a much higher count than expected, and the opposite for high negative residuals. Knowing this, we see that the absolute value of both "Yes" and "No" for the "Light" drinking frequency could both contribute to a significant lack of fit.
+   [Show expected observed and residual values]
    
   However, a significant lack of fit driven by on or more cells in a test of independence suggests that an association does in fact exist. This is not to say alcohol directly causes high blood pressure, but we can conclude, after rejecting the null hypothesis, that alcohol consumption and high blood pressure are associated. If we wanted to test how strong of a variable alcohol consumption was, we would need to do further research and testing in the future.
   
@@ -90,7 +90,7 @@ In a multiple linear regression of BMI on age, days of physical activity, and sm
   [Insert vraiable importance here]
   
   
-  Checking the confusion matrix, we can see that we had a 70.88% accuracy of people being classified correctly. However our true positive and negative rates were 46.93% and 84.65%, meaning that only 46.93% of all food insecure people were correctly classified as food insecure and 84.65% of food secure people were classified correctly. Since we have a high specificity and low sensitivity. We can assume that our model is good at dictating when someone is food secure, however it has issues like false negatives when classifying someone as food insecure.
+  Checking the confusion matrix, we can see that we had a 70.88% accuracy of people being classified correctly. However our true positive and negative rates were 46.93% and 84.65%, meaning that only 46.93% of all food insecure people were correctly classified as food insecure and 84.65% of food secure people were classified correctly. Since we have a high specificity and low sensitivity, we can assume that our model is good at dictating when someone is food secure, however it has issues like false negatives when classifying someone as food insecure.
   [Show TN TP FN FP values/rate here]
 
 
