@@ -188,6 +188,7 @@ install_github(repo="ryantibs/best-subset", subdir="bestsubset")
 library(haven)
 library(tidyverse)
 library(gmodels)
+library(corrplot)
 
 
 cst = data_demo %>%      #creating the dataframe for the chi square goodness of fit test
@@ -231,6 +232,9 @@ chisq_res
 chisq_res$expected
 print(round(chisq_res$expected,2))
 print(round(chisq_res$residuals, 2)) 
+
+corrplot(chisq_res$residuals, is.cor = FALSE)
+
 
 ```
 
