@@ -211,21 +211,94 @@ plot(final_fit)
 
 ```{r, q2}
 
-# Can we predict whether an adult is obese using demographic and lifestyle predictors?
-#   - Use selection method, and PCA.
+# Predict adult obesity (BMI >= 30) from demographics + lifestyle using PCA + logistic regression.
 
-# We will need to clean the data here, looking for only predictors that relate to BMI.
-# Idea is to use subset selection or PCA to find the most important predictors.
+pca_obesity_df = data_total %>%
+  transmute(
+    BMI = BMXBMI,
+    age = RIDAGEYR,
+    gender = RIAGENDR,
+    race_eth = RIDRETH3,
+    days_physical = PAD800,
+    smoking = SMQ040
+  ) %>%
+  filter(
+    age >= 20,
+    !is.na(BMI),
+    !is.na(age),
+    !is.na(gender),
+    !is.na(race_eth),
+    !is.na(days_physical),
+    !is.na(smoking),
+    !days_physical %in% c(7777, 9999),
+    smoking %in% c(1, 2, 3)
+  ) %>%
+  mutate(
+    gender = factor(gender, levels = c(1, 2),
+                    labels = c("Male", "Female")),
+    smoking = factor(smoking, levels = c(1, 2, 3),
+                     labels = c("Every day", "Some days", "Not at all")),
+    smoking = relevel(smoking, ref = "Not at all"),
+    race_eth = droplevels(factor(race_eth)),
+    obese = factor(
+      BMI >= 30,
+      levels = c(FALSE, TRUE),
+      labels = c("Not obese", "Obese")
+    )
+  )
 
-# Relate blood pressure, bmi, vs other demographic measures.
+# Build matrix from same formula
+X_obesity = model.matrix(
+  ~ age + gender + race_eth + days_physical + smoking,
+  data = pca_obesity_df
+)[, -1, drop = FALSE]
 
+pca_obesity = prcomp(X_obesity, center = TRUE, scale. = TRUE)
 
-# https://github.com/ryantibs/best-subset
-# library(devtools)
-# install_github(repo="ryantibs/best-subset", subdir="bestsubset")
+imp = summary(pca_obesity)$importance
+imp[, seq_len(min(8L, ncol(imp))), drop = FALSE]
 
+# Use enough PCs for glm (cap at 4); PCA is unsupervised so we keep k modest.
+k_pc = min(4L, ncol(pca_obesity$x))
 
+pc_ob_df = as_tibble(pca_obesity$x[, seq_len(k_pc), drop = FALSE]) %>%
+  mutate(obese = pca_obesity_df$obese)
 
+pve1 = round(100 * imp["Proportion of Variance", "PC1"], 1)
+pve2 = round(100 * imp["Proportion of Variance", "PC2"], 1)
+
+ggplot(pc_ob_df, aes(PC1, PC2, color = obese)) +
+  geom_point(alpha = 0.35, size = 1.5) +
+  labs(
+    title = "PCA of demographic and lifestyle predictors (adults 20+)",
+    subtitle = "Colored by obesity (BMI >= 30); BMI excluded from PCA",
+    x = sprintf("PC1 (%s%% variance)", pve1),
+    y = sprintf("PC2 (%s%% variance)", pve2),
+    color = NULL
+  ) +
+  theme_minimal()
+
+# Logistic regression on leading PCs (supervised step after unsupervised PCA)
+pc_terms = paste0("PC", seq_len(min(4L, k_pc)))
+obesity_glm_form = as.formula(paste("obese ~", paste(pc_terms, collapse = " + ")))
+obesity_glm = glm(obesity_glm_form, family = binomial(), data = pc_ob_df)
+summary(obesity_glm)
+
+pc_ob_df = pc_ob_df %>%
+  mutate(
+    p_hat = predict(obesity_glm, type = "response"),
+    pred_class = factor(
+      ifelse(p_hat >= 0.5, "Obese", "Not obese"),
+      levels = c("Not obese", "Obese")
+    )
+  )
+
+table(observed = pc_ob_df$obese, predicted = pc_ob_df$pred_class)
+mean(pc_ob_df$pred_class == pc_ob_df$obese)
+
+# Variables most aligned with PC1 (absolute loadings)
+load1 = sort(abs(pca_obesity$rotation[, "PC1"]), decreasing = TRUE)
+head(load1, 10)
 
 ```
 
