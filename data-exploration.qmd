@@ -1,6 +1,7 @@
 ---
 title: "Final Project, Group 1"
 description: "Stats 515-002"
+date: today
 format: html
 authors:
   - "Jonathan Dale"
