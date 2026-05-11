@@ -299,7 +299,6 @@ prunetree$variable.importance
 tree_class = predict(prunetree, tdata, type="class")
 treeprob = predict(prunetree, tdata, type = "prob")[, "Insecure"]
 cm = confusionMatrix(tree_class, tdata$Food_insecure, positive = "Insecure")
-print(cm)
 FN = cm$table[2,1]  
 TP = cm$table[1,1]    
 FNR = FN / (FN + TP)
