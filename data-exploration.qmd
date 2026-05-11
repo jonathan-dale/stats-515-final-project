@@ -243,12 +243,6 @@ test_data2 = test_data2 %>% mutate(
                     WIC = factor(WIC,levels = c(1,2), labels = c("Yes","No"))) 
 test_data2 = test_data2 %>% na.omit(test_data2)
 
-```
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| paged-print: false
 set.seed(1)
 
 
@@ -258,7 +252,7 @@ indices = sample(seq_len(nrow(test_data2)), size = trainsize)
 tdata = test_data2[-indices,]
 trdata = test_data2[indices,]
 
-prop.table(table(trdata$Food_insecure))
+#prop.table(table(trdata$Food_insecure))
 
 FoodTree = rpart(Food_insecure~ On_Snap + EFood+ WIC + IPR + hh_size + age + sex + race + education,
                  trdata, method = "class", na.action = na.rpart, control = rpart.control(
@@ -267,7 +261,7 @@ FoodTree = rpart(Food_insecure~ On_Snap + EFood+ WIC + IPR + hh_size + age + sex
                    maxdepth = 6
                  ))
 
-printcp(FoodTree)
+#printcp(FoodTree)
 bestv = FoodTree$cptable[which.min(FoodTree$cptable[, "xerror"]),"CP"]
 prunetree = prune(FoodTree,cp=bestv)
 rpart.plot(prunetree,
@@ -275,9 +269,14 @@ rpart.plot(prunetree,
            extra = 104,
            fallen.leaves = TRUE)
 
-library(imager)
-my_image = load.image("stats-515-final-project\\data\\classification_tree.jpg")
-plot(my_image)  
+```
+```{r, out.width = "120%"}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+
+knitr::include_graphics("C:/Users/shado/OneDrive/Desktop/stats-515-final-project/data/classification_tree.png")
 ```
   
   From our model and examining the "variable.importance", we are able to tell that Emergency food is the first split due its high impact on predicting an individuals' food security. 

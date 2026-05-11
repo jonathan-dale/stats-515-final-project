@@ -206,37 +206,10 @@ X-squared = 64.234, df = 3, p-value = 7.315e-14</code></pre>
 <p>After compiling the data needed for this testing, we decided that forming a classification tree would fit best since we wanted to find an outcome based on the categorization of the individuals, and not a continuous result. Now that the data has been compiled by individuals’ sequence number, we factor the levels to be yes or no for the majority of our variables, and label insecure or secure based on the FSDAD column.</p>
 <p>We used a 70%/30% training/testing split since we had a large data set, and would afford us a more rigorous training set to work off of. After background research on the rpart package, we examined the complexity parameter table, and found the tree that would use the lowest cross validated error (xerror) and the amount of splits correlated to it. Using “which.min()”, we were able to prune our tree and prevent over fitting our model.</p>
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
- Insecure    Secure 
-0.3564972 0.6435028 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Classification tree:
-rpart(formula = Food_insecure ~ On_Snap + EFood + WIC + IPR + 
-    hh_size + age + sex + race + education, data = trdata, na.action = na.rpart, 
-    method = "class", control = rpart.control(cp = 0.005, minsplit = 20, 
-        maxdepth = 6))
-
-Variables actually used in tree construction:
-[1] age       education EFood     IPR       race     
-
-Root node error: 631/1770 = 0.3565
-
-n= 1770 
-
-         CP nsplit rel error  xerror     xstd
-1 0.2250396      0   1.00000 1.00000 0.031935
-2 0.0332805      1   0.77496 0.77496 0.029814
-3 0.0079239      2   0.74168 0.74643 0.029464
-4 0.0055468      7   0.70048 0.75277 0.029544
-5 0.0050000      9   0.68938 0.78764 0.029962</code></pre>
-</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="data-exploration_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="data/classification_tree.png" class="img-fluid figure-img" style="width:120.0%"></p>
 </figure>
 </div>
 </div>
