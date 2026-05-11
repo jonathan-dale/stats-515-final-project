@@ -249,8 +249,6 @@ test_data2 = test_data2 %>% na.omit(test_data2)
 #| message: false
 #| warning: false
 #| paged-print: false
-library(jpeg)
-rm(FoodTree, bestv, prunetree)
 set.seed(1)
 
 
@@ -277,9 +275,9 @@ rpart.plot(prunetree,
            extra = 104,
            fallen.leaves = TRUE)
 
-img = readJPEG("classification_tree.jpg")
-plot(1:2, type='n', xlab="", ylab="", axes=FALSE)
-rasterImage(img, 1, 1, 2, 2)     
+library(imager)
+my_image = load.image("stats-515-final-project\\data\\classification_tree.jpg")
+plot(my_image)  
 ```
   
   From our model and examining the "variable.importance", we are able to tell that Emergency food is the first split due its high impact on predicting an individuals' food security. 
