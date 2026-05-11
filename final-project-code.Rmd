@@ -1,5 +1,5 @@
 ---
-title: "data-exploration"
+title: "Final project code"
 date: "`r Sys.Date()`"
 authors: 
   - "Jonathan Dale"
@@ -11,6 +11,8 @@ output:
     word_document: default
     pdf_document: default
 ---
+
+[Final project report](data-exploration.html)
 
 ```{css, echo=FALSE}
 
@@ -92,9 +94,6 @@ Does alcohol consumption remain associated with BMI after adjusting smoking stat
 ```{r, q1}
 
 # How are age, gender, race/ethnicity, physical activity, and smoking associated with BMI?
-
-
-
 
 # Linear regression: BMI ~ age + gender + physical activity + smoking
 
@@ -178,29 +177,44 @@ subset_sum = summary(subset_fit)
 subset_sum$adjr2
 subset_sum$cp
 subset_sum$bic
+subset_sum
 
 # Best model size by each criterion
-best_adjr2_size = which.max(subset_sum$adjr2)
-best_cp_size    = which.min(subset_sum$cp)
-best_bic_size   = which.min(subset_sum$bic)
+best_adjr2_size = which.max(subset_sum$adjr2) # identify the location of the maximum Adj. R_sq
+best_cp_size    = which.min(subset_sum$cp)    # identify the location of the minimum Cp
+best_bic_size   = which.min(subset_sum$bic)   # identify the location of the minimum BIC
 
 best_adjr2_size
 best_cp_size
 best_bic_size
 
 # Coefficients for best BIC, cp, adjR^2 model
-coef(subset_fit, best_bic_size)
-coef(subset_fit, best_cp_size)
 coef(subset_fit, best_adjr2_size)
+coef(subset_fit, best_cp_size)
+coef(subset_fit, best_bic_size)
 
 
 # Refit with selected terms
 final_fit = lm(BMI ~ age + days_physical + smoking, data = model_df)
 summary(final_fit)
 
-# Visual diagnostics plot
+# Plot RSS, adjusted R^2, Cp, and BIC for all of the models at once
 par(mfrow = c(2, 2)) # divide the plotting area into 2x2 grid
 plot(final_fit)
+
+
+par(mfrow = c(2, 2)) # divide the plotting area into 2x2 grid
+plot(subset_sum$rss, xlab="Number of Variables ", ylab = "RSS", type = "l")
+points(which.min(subset_sum$rss),min(subset_sum$rss), col="red", cex=2, pch=20)
+
+plot(subset_sum$adjr2, xlab = "Number of Variables ", ylab = "Adjusted RSq", type = "l")
+points(best_adjr2_size, max(best_adjr2_size), col="red", cex=2, pch=20)
+
+plot(subset_sum$cp, xlab = "Number of Variables ", ylab = "Cp", type = "l")
+points(best_cp_size, best_cp_size, col="red", cex=2, pch=20)
+
+plot(subset_sum$bic, xlab = "Number of Variables ", ylab = "BIC ", type = "l")
+points(best_bic_size, best_bic_size, col="red", cex=2, pch=20)
 
 ```
 
@@ -209,7 +223,7 @@ plot(final_fit)
 
 
 
-```{r, q2}
+```{r, q2 PCA}
 
 
 # Predict adult obesity (BMI >= 30) from demographics + lifestyle using PCA + logistic regression.
@@ -251,13 +265,34 @@ pca_obesity_df = data_total %>%
 # Build matrix from same formula
 X_obesity = model.matrix(
   ~ age + gender + race_eth + days_physical + smoking,
-  data = pca_obesity_df
-)[, -1, drop = FALSE]
+  data = pca_obesity_df)[, -1, drop = FALSE]
 
 pca_obesity = prcomp(X_obesity, center = TRUE, scale. = TRUE)
 
 imp = summary(pca_obesity)$importance
 imp[, seq_len(min(8L, ncol(imp))), drop = FALSE]
+
+# Scree plot: proportion of variance per PC (for choosing how many PCs matter)
+n_pc_obesity = ncol(pca_obesity$x)
+scree_obesity_df = tibble(
+  pc = seq_len(n_pc_obesity),
+  proportion_variance = as.numeric(
+    imp["Proportion of Variance", seq_len(n_pc_obesity), drop = TRUE]
+  )
+)
+p_obesity_scree = ggplot(scree_obesity_df, aes(pc, proportion_variance)) +
+  geom_col(width = 0.65, fill = "steelblue", alpha = 0.85) +
+  geom_line(aes(group = 1), color = "#c0392b", linewidth = 0.6) +
+  geom_point(color = "#c0392b", size = 2.2) +
+  scale_x_continuous(breaks = scree_obesity_df$pc) +
+  scale_y_continuous(labels = scales::label_percent(accuracy = 0.1)) +
+  labs(
+    title = "Scree plot: demographic and lifestyle predictors",
+    subtitle = "BMI is not entered into PCA; components summarize age, sex, race, activity, smoking",
+    x = "Principal component",
+    y = "Proportion of variance"
+  ) +
+  theme_minimal()
 
 # Use enough PCs for glm (cap at 4); PCA is unsupervised so we keep k modest.
 k_pc = min(4L, ncol(pca_obesity$x))
@@ -268,7 +303,7 @@ pc_ob_df = as_tibble(pca_obesity$x[, seq_len(k_pc), drop = FALSE]) %>%
 pve1 = round(100 * imp["Proportion of Variance", "PC1"], 1)
 pve2 = round(100 * imp["Proportion of Variance", "PC2"], 1)
 
-ggplot(pc_ob_df, aes(PC1, PC2, color = obese)) +
+p_obesity_pca = ggplot(pc_ob_df, aes(PC1, PC2, color = obese)) +
   geom_point(alpha = 0.35, size = 1.5) +
   labs(
     title = "PCA of demographic and lifestyle predictors (adults 20+)",
@@ -300,6 +335,9 @@ mean(pc_ob_df$pred_class == pc_ob_df$obese)
 # Variables most aligned with PC1 (absolute loadings)
 load1 = sort(abs(pca_obesity$rotation[, "PC1"]), decreasing = TRUE)
 head(load1, 10)
+
+p_obesity_scree
+p_obesity_pca
 
 ```
 
