@@ -357,7 +357,7 @@ prop.table(table(trdata$Food_insecure))
 
 FoodTree = rpart(Food_insecure~ On_Snap + EFood+ WIC + IPR + hh_size + age + sex + race + education,
                  trdata, method = "class", na.action = na.rpart, control = rpart.control(
-                   cp = 0.005,
+                   cp = 0.006,
                    minsplit = 20,
                    maxdepth = 6
                  ))

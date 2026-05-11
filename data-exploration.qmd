@@ -11,10 +11,11 @@ authors:
   NHANES, the National Health and Nutrition Examination Survey, is a survey conducted by the CDC's National Center for Health Statistics, NCHS, annually. This survey collects information from about 5000 adults and children across the country every year, since 1999. As there are records prior, however continuous data collection has not stopped since 1999.Data published from NHANES is publicly available, minus any potentially identifiable information pertaining the participants. 
   In our research we wanted to focus on the most recent year that data is available for, and we have decided to use the 2021-2023 data set. This is due to NCHS being unable to provide the complete 2025 data set. Due to the extensive amounts of data, we decided to spread our research questions across different topics. In this project we delve into the associations with BMI, predicting if adult obesity, association between alcohol consumption and high blood pressure, and predicting the food security of a household. 
   
-#Method
+# Method
   Our initial step is to import the "Haven" library, and the other libraries needed for our testing, in order to import and read the .xpt files obtained from the NHANES website.
-    [Insert code portions]
-  Next we will require to inner join the relevant .xpt files based on the variables associated with our testing.
+```{r}
+library(haven)
+```
   
 ## How are age, gender, race/ethnicity, physical activity, and smoking associated with BMI?
 
@@ -50,25 +51,126 @@ In a multiple linear regression of BMI on age, days of physical activity, and sm
 
 
 
-#Q3
-##Is alcohol use (ALQ_L) associated with high blood pressure (BPQ_L — "ever told you had high blood pressure")?
-##Intro for Q3
+
+## Is alcohol use (ALQ_L) associated with high blood pressure (BPQ_L — "ever told you had high blood pressure")?
+
   As noted earlier, NHANES survey collects a large amount of data, with topics ranging from physical activity to most common types of diseases. 
   For this question, we decided to see if we could predict an association between alcohol use and high blood pressure diagnostic. To do this, we pulled the following columns from the ALQ_L.xpt file, ALQ111, "ever had a drink of alcohol", ALQ130, the frequency at which the individual drank. The levels factored for drinking frequency varied from "Non-drinker", "Light", "Moderate", and "High".  We then pulled the following column from the BPQ_L.xpt file, BPQ080, "have you ever been told you had high blood pressure". Finally, we joined the two data sets by inner joining by the individuals' sequence number and filtered it to anyone 18 years or older, as we are looking into alcohol consumption. 
   
   
   After compiling the data needed for this testing, we decided that using the chi square test of independence would fit best since we are working with two categorical variables. Through this testing, we will be able to determine whether the two variables, alcohol consumption and high blood pressure, are associated with each other. Now that the data has been gathered, we enter the two columns into a contingency table and run the chi square test.
-  [Insert code output to show contingency table + chi sqaure results]
+```{r}
+#| message: false
+#| warning: false
+#| include: false
+#| paged-print: false
+library(haven)
+library(tidyverse)
+library(gmodels)
+library(corrplot)
+
+data_alq = read_xpt("./data/ALQ_L.xpt")     # Alcohol
+data_bmx = read_xpt("./data/BMX_L.xpt")     # Body measurements
+data_bpq = read_xpt("./data/BPQ_L.xpt")     # Blood Pressure & Cholesterol
+data_demo = read_xpt("./data/DEMO_L.xpt")   # Demographics data
+data_fsq = read_xpt("./data/FSQ_L.xpt")     #Food security 
+data_inq = read_xpt("./data/INQ_L.xpt")     # Income information
+data_paq = read_xpt("./data/PAQ_L.xpt")     # Physical activity adult
+data_paqy = read_xpt("./data/PAQY_L.xpt")   # Physical activity youth
+data_smq = read_xpt("./data/SMQ_L.xpt")     # Smoke usage
+data_smqr = read_xpt("./data/SMQRTU_L.xpt") # Smoking recent
+cst = data_demo %>%      #creating the dataframe for the chi square goodness of fit test
+  inner_join(data_alq, by = "SEQN") %>%
+  inner_join(data_bpq, by = "SEQN") %>%
+  filter(RIDAGEYR >= 18)
+
+cst$ALQ111[is.na(cst$ALQ111)] = 0 # replacing na values with 0 to fit testing
+cst$ALQ130[is.na(cst$ALQ130)] = 0
+
+
+cst["HighBP"]= c( " ")  #creating column space for high blood pressure
+cst["Drinks"]= c( " ")  #column for amount of drinks had per day
+
+
+
+cst_clean = cst%>% mutate(cst, Drinks = if_else(ALQ111 == 2, "Non-drinker",
+                                         if_else(ALQ111 ==1 & ALQ130 <=2,"Light",
+                                                 if_else(ALQ111 == 1 & ALQ130 <= 4, "Moderate",
+                                                         if_else(ALQ111 ==1 & ALQ130 > 4, "High",
+                                                                 if_else(ALQ111 == 9, NA,
+                                                                         if_else(ALQ111 == ".", NA, 
+                                                                                 if_else(ALQ111==1 & ALQ130 ==777, NA,
+                                                                                         if_else(ALQ111==1 & ALQ130 ==999, NA,
+                                                                                                 if_else(ALQ111==1 & ALQ130 == ".",NA,"Non-drinker"))))))))),
+                     HighBP = if_else(BPQ080 == 1, "Yes", "No"),
+
+      HighBP  = factor(HighBP,  levels = c("No", "Yes")),
+      Drinks   = factor(Drinks,
+                       levels = c("Non-drinker", "Light",
+                                  "Moderate", "High")))
+
+cst_clean= cst_clean[!is.na(cst_clean$Drinks),]
+
+test_data = cst_clean %>% select(HighBP, Drinks)
+contingency_table = table(test_data$HighBP, test_data$Drinks)
+print(contingency_table)
+
+chisq_res = chisq.test(contingency_table)  # test of independence
+chisq_res
+chisq_res$expected
+print(round(chisq_res$expected,2))
+print(round(chisq_res$residuals, 2)) 
+
+corrplot(chisq_res$residuals, is.cor = FALSE)
+
+
+```
+# Contingency Table and Chi Sqaure Results
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+print(contingency_table)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+chisq_res
+```
   
   
    When comparing the chi square "expected" results, it is important to remember that the values shown is what the expected observations would be if the two variables were independent of each other. When looking at the values of the chi square "residuals", or Pearson Residuals, if the absolute value of a cell is greater than three, it would indicate whether or not that cell contributed to a significant lack of fit. This would mean for a high positive residual the cell contains a much higher count than expected, and the opposite for high negative residuals. Knowing this, we see that the absolute value of both "Yes" and "No" for the "Light" drinking frequency could both contribute to a significant lack of fit.
-   [Show expected observed and residual values]
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+print(round(chisq_res$expected,2))
+```
+
    
   However, a significant lack of fit driven by on or more cells in a test of independence suggests that an association does in fact exist. This is not to say alcohol directly causes high blood pressure, but we can conclude, after rejecting the null hypothesis, that alcohol consumption and high blood pressure are associated. If we wanted to test how strong of a variable alcohol consumption was, we would need to do further research and testing in the future.
   
   
   Additionally, we were able to plot the residuals from our expected values against the observed ones, and we noted that the absolute value of all the standardized residuals were greater than 2. This also leads us to the same conclusion where both variables can be noted as statistically significant.
-  [Insert residual plot and table]
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+corrplot(chisq_res$residuals, is.cor = FALSE)
+
+```
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+print(round(chisq_res$residuals, 2)) 
+```
   
   We reject the null hypothesis since the p-value, 7.315e-14 is much smaller than the significance levels. This provides strong evidence of a significant association between the person's blood pressure  and the amount of drinks consumed. In other words, the chi-square test results indicate that the likelihood of an adult having high blood pressure is significantly associated with the amount of drinks consumed.
   
@@ -76,8 +178,8 @@ In a multiple linear regression of BMI on age, days of physical activity, and sm
 
 
 
-#Q4
-##Can we predict whether a household will be Food Secure or Inseucre based on based on SNAP participation, WIC receipt, emergency food use, and demographic characteristics?
+
+## Can we predict whether a household will be Food Secure or Inseucre based on based on SNAP participation, WIC receipt, emergency food use, and demographic characteristics?
  
   For this question we acquired FSQ_L.xpt and Demo_L.xpt files from the NHANES data directory, and used the following columns; from FSQ_L.xpt we selected FSDAD, "adult food security category, FSQ012, whether or not the person's household received SNAP or Food Stamp benefits in the last 12 months, FSD151, whether or not the household received emergency food, including food from a church, food pantry, food bank, or soup kitchen, FSD162, if the household received Women, Infants, and Children program benefits in the last 12 months, and FSD165N, how many people in a household received SNAP or food stamps benefits.
 
@@ -88,20 +190,141 @@ In a multiple linear regression of BMI on age, days of physical activity, and sm
   After compiling the data needed for this testing, we decided that forming a classification tree would fit best since we wanted to find an outcome based on the categorization of the individuals, and not a continuous result. Now that the data has been compiled by individuals' sequence number, we factor the levels to be yes or no for the majority of our variables, and label insecure or secure based on the FSDAD column. 
   
   We used a 70%/30% training/testing split since we had a large data set, and would afford us a more rigorous training set to work off of. After background research on the rpart package, we examined the complexity parameter table, and found the tree that would use the lowest cross validated error (xerror) and the amount of splits correlated to it. Using "which.min()", we were able to prune our tree and prevent over fitting our model. 
+```{r}
+#| message: false
+#| warning: false
+#| include: false
+#| paged-print: false
+#Q4 - Can we predict whether an individual or household is food secure or insecure based on the following variables
+
+library(haven)       
+library(tidyverse)
+library(caret)       
+library(rpart)       
+library(rpart.plot)
+data_fsq = read_xpt("./data/FSQ_L.xpt")
+
+data_fsq$FSDAD[is.na(data_fsq$FSDAD)] = 0
+
+data_fsq["Food_insecure"]=c(" ") #column that says whether or not the individual is classified as food insecure or not
+data_fsq["On_Snap"]=c(" ")  #column that says whether or not they were receiving SNAP benefits in the last 12 months
+data_fsq["EFood"]= c(" ")  #column that says whether or not they received emergency food
+data_fsq["WIC"]=c(" ")   #column that says whether or not the household received WIC program benefits
+data_fsq["NSnap"]= c(" ") #column that says the amount of people in a household received SNAP benefits
+
+# adding N/A as a value to clean later on
+fsq_test = data_fsq %>% mutate(data_fsq, Food_insecure= if_else(FSDAD>=3,1, #1 = yes, 2= no
+                                                      if_else(FSDAD>0 & FSDAD <3, 2,
+                                                              if_else(FSDAD == ".", NA, 2))),
+                          On_Snap = if_else(FSQ012>2, NA,
+                                                  if_else(FSQ012 == ".",NA, FSQ012)),
+                  EFood = if_else(FSD151>2, NA,
+                                        if_else(FSD151 == ".",NA,FSD151)),
+                  WIC = if_else(FSD162>2, NA,
+                                if_else(FSD162== ".", NA, FSD162)),
+                  NSnap =if_else(FSD165N>7, NA,
+                                 if_else(FSD165N==".",NA,FSD165N)))
+
+
+demo_test = data_demo %>%
+  select(SEQN, age=  RIDAGEYR, sex = RIAGENDR, race = RIDRETH3, education = DMDEDUC2, IPR = INDFMPIR, hh_size = DMDHHSIZ)
+
+test_data2 = fsq_test %>%
+    inner_join(demo_test, by = "SEQN") %>%
+        select(Food_insecure,On_Snap,EFood,WIC,NSnap,age, sex, race, education, IPR, hh_size)
+
+test_data2 = test_data2 %>% mutate(
+                    Food_insecure = factor(Food_insecure, levels = c(1,2), labels = c("Insecure","Secure")),
+                    sex = factor(sex, levels = c(1,2), labels = c("Male","Female")),
+                    race = factor(race),
+                    education = factor(education),
+                    On_Snap = factor(On_Snap, levels = c(1,2), labels = c("Yes","No")),
+                    EFood= factor(EFood,levels = c(1,2), labels=c("Yes","No")),
+                    WIC = factor(WIC,levels = c(1,2), labels = c("Yes","No"))) 
+test_data2 = test_data2 %>% na.omit(test_data2)
+
+```
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+library(jpeg)
+rm(FoodTree, bestv, prunetree)
+set.seed(1)
+
+
+
+trainsize = floor(0.70 * nrow(test_data2))
+indices = sample(seq_len(nrow(test_data2)), size = trainsize)
+tdata = test_data2[-indices,]
+trdata = test_data2[indices,]
+
+prop.table(table(trdata$Food_insecure))
+
+FoodTree = rpart(Food_insecure~ On_Snap + EFood+ WIC + IPR + hh_size + age + sex + race + education,
+                 trdata, method = "class", na.action = na.rpart, control = rpart.control(
+                   cp = 0.005,
+                   minsplit = 20,
+                   maxdepth = 6
+                 ))
+
+printcp(FoodTree)
+bestv = FoodTree$cptable[which.min(FoodTree$cptable[, "xerror"]),"CP"]
+prunetree = prune(FoodTree,cp=bestv)
+rpart.plot(prunetree,
+           type = 4,
+           extra = 104,
+           fallen.leaves = TRUE)
+
+img = readJPEG("classification_tree.jpg")
+plot(1:2, type='n', xlab="", ylab="", axes=FALSE)
+rasterImage(img, 1, 1, 2, 2)     
+```
   
   From our model and examining the "variable.importance", we are able to tell that Emergency food is the first split due its high impact on predicting an individuals' food security. 
-  [Insert vraiable importance here]
-  
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+prunetree$variable.importance
+```
+
   
   Checking the confusion matrix, we can see that we had a 70.88% accuracy of people being classified correctly. However our true positive and negative rates were 46.93% and 84.65%, meaning that only 46.93% of all food insecure people were correctly classified as food insecure and 84.65% of food secure people were classified correctly. Since we have a high specificity and low sensitivity, we can assume that our model is good at dictating when someone is food secure, however it has issues like false negatives when classifying someone as food insecure.
-  [Show TN TP FN FP values/rate here]
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+
+tree_class = predict(prunetree, tdata, type="class")
+treeprob = predict(prunetree, tdata, type = "prob")[, "Insecure"]
+cm = confusionMatrix(tree_class, tdata$Food_insecure, positive = "Insecure")
+print(cm)
+FN = cm$table[2,1]  
+TP = cm$table[1,1]    
+FNR = FN / (FN + TP)
+
+cm
+```
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+FNR =round ((FN / (FN + TP))*100, digits = 2)
+cat("The False Negative rate is ",FNR,"%.")
+
+```
 
 
   When checking the predicted values, we can see that 63.73% of the people the model predicted as food insecure were correct, and 73.51% of the people predicted as food secure were correct. Additionally we are able to check our false negative rate, and we resulted with a 53.07% rate. This indicates that our model missed out on about 147 households, who were classified as secure. We can conclude that our model is able to predict the food security of individuals, however the results should be investigated more due to the large amount of households that were excluded in the final results.
 
   
 
-#Conclusion
+# Conclusion
 
 In summary, according to our analysis and testing of the data, (insert portion related to your questions and results), as well as the significant association between alcohol consumption and high blood pressure, and the reliability of our classification tree. 
 
