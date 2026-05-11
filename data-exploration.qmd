@@ -7,7 +7,7 @@ authors:
   - "Jonathan Dale"
   - "Rashad Chowdhury"
 ---
-##Introduction
+## Introduction
   NHANES, the National Health and Nutrition Examination Survey, is a survey conducted by the CDC's National Center for Health Statistics, NCHS, annually. This survey collects information from about 5000 adults and children across the country every year, since 1999. As there are records prior, however continuous data collection has not stopped since 1999.Data published from NHANES is publicly available, minus any potentially identifiable information pertaining the participants. 
   In our research we wanted to focus on the most recent year that data is available for, and we have decided to use the 2021-2023 data set. This is due to NCHS being unable to provide the complete 2025 data set. Due to the extensive amounts of data, we decided to spread our research questions across different topics. In this project we delve into the associations with BMI, predicting if adult obesity, association between alcohol consumption and high blood pressure, and predicting the food security of a household. 
   
