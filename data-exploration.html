@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.25">
+<meta name="generator" content="quarto-1.9.35">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -11,6 +11,9 @@
 
 <title>Final Project, Group 1</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -63,15 +66,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="data-exploration_files/libs/clipboard/clipboard.min.js"></script>
 <script src="data-exploration_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="data-exploration_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="data-exploration_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="data-exploration_files/libs/quarto-html/popper.min.js"></script>
 <script src="data-exploration_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="data-exploration_files/libs/quarto-html/anchor.min.js"></script>
 <link href="data-exploration_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="data-exploration_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="data-exploration_files/libs/quarto-html/quarto-syntax-highlighting-46f66b053e56abd73bb6e954d61a315b.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="data-exploration_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="data-exploration_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="data-exploration_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="data-exploration_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -131,8 +133,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="how-are-age-gender-raceethnicity-physical-activity-and-smoking-associated-with-bmi" class="level2">
 <h2 class="anchored" data-anchor-id="how-are-age-gender-raceethnicity-physical-activity-and-smoking-associated-with-bmi">How are age, gender, race/ethnicity, physical activity, and smoking associated with BMI?</h2>
-<p>To answer this question, we will use linear regression analysis. The goal of using linear regression is to assess weather relationships observed in a sample are likely to exist in the larger population. The p-values associated with each independent variable test the null hypothesis that the corresponding coefficients is equal to zero, indicating no linear relationship with the dependent variable. Failing to reject the null suggests that insufficient evidence of an association between the independent variable and the response.</p>
-<p>We start by downloading NHANES data from the CDC website for the 2021 - 2023 cohort <a href="https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Questionnaire&amp;Cycle=2021-2023">cdc.gov</a>. We used a subset of the available data set which includeed: <code>Alcohol</code>, <code>Body measurements</code>, <code>Blood Pressure &amp; Cholesterol</code>, <code>Demographics data</code>, <code>Income information</code>, <code>Smoke usage</code>, and <code>Physical activity</code> (both youth and adults). These files are available to the public in <code>.xpt</code> format, and after downloading, they were loaded into a data frame in R using the <code>read_xpt</code> function. Since each data file contains a unique <code>Respondent Sequnece Number</code> we are able to join all of the individual files into one full data frame. We then begin to fit a linear regression model using BMI as a predictor and age, gender, physical activity, and smoking as independent variables. Our total data frame is used to filter only the necessary variables and drop any missing values. We are left with 1847 observations to work with for a linear regression model; the the results show that a clear relation ship is not visible.</p>
+<p>To answer this question, we will use linear regression analysis and begin with a short overview of the regression process. The goal of using linear regression is to assess weather the relationships that we observe in a sample are likely to exist in the larger population. The regression analysis computes a t-statistic for each independent coefficient and turns that into a p-value. The p-value which is associated with each independent variable test the null hypothesis that the corresponding coefficients is equal to zero, indicating that no linear relationship with the dependent variable exists. Failing to reject the null suggests that insufficient evidence of an association between the independent variable and the response exist, however this is not support of the null hypothesis.</p>
+<p>We start by downloading NHANES data for the 2021 - 2023 cohort from the CDC website <a href="https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Questionnaire&amp;Cycle=2021-2023">cdc.gov</a>. We used a subset of the available data set which includeed: <code>Alcohol</code>, <code>Body measurements</code>, <code>Blood Pressure &amp; Cholesterol</code>, <code>Demographics data</code>, <code>Income information</code>, <code>Smoke usage</code>, and <code>Physical activity</code> (both youth and adults). These files are available to the public in <code>.xpt</code> format, and after downloading, they were loaded into a data frame in R using the <code>read_xpt</code> function. Since each data file contains a unique <code>Respondent Sequnece Number</code> we are able to join all of the individual files then combined into one full data frame. This total data frame is then filtered to include only the necessary variables and drop any missing values. We then fit a linear regression model using BMI as a predictor and age, gender, physical activity, and smoking as independent variables. We are left with 1847 observations to work with for a linear regression model; viewing a plot of the results we can see that a strong relation ship is not present.</p>
 </section>
 <section id="checking-for-significance-in-the-model" class="level2">
 <h2 class="anchored" data-anchor-id="checking-for-significance-in-the-model">Checking for significance in the model</h2>
@@ -209,7 +211,7 @@ X-squared = 64.234, df = 3, p-value = 7.315e-14</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="data/classification_tree.png" class="img-fluid figure-img" style="width:120.0%"></p>
+<p><img src="./data/classification_tree.png" class="img-fluid figure-img" style="width:120.0%"></p>
 </figure>
 </div>
 </div>
