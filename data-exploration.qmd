@@ -701,5 +701,5 @@ cat("The False Negative rate is ",FNR,"%.")
 
 # Conclusion
 
-In summary, according to our analysis and testing of the data, (insert portion related to your questions and results), as well as the significant association between alcohol consumption and high blood pressure, and the reliability of our classification tree. 
+In summary, according to our analysis and testing of the data by linear regression models, we find it dificult to find a model that explains the variation in BMI as well as the significant association between alcohol consumption and high blood pressure, and the reliability of our classification tree. 
 
